@@ -1,32 +1,24 @@
 import os
 
-# --- IMAP SETTINGS (For Reading the Trigger Email) ---
-EMAIL_ACCOUNT = ""        # Replace with your email
-APP_PASSWORD = ""  # Replace with your App Password
-IMAP_SERVER = "imap.gmail.com"
-TARGET_SUBJECT = "Fwd: CNFM OPEN FT and WO"
+# --- GOOGLE API SETTINGS ---
+CLIENT_SECRET_FILE = "credentials.json" # Downloaded from Google Cloud Console
+TOKEN_FILE = "token.json"               # Created automatically after login
+SCOPES = ['https://mail.google.com/']   # Full access to Gmail
 
-# --- SMTP SETTINGS (For Sending the HTML Table Email) ---
-SMTP_SERVER = "smtp.gmail.com"
-SMTP_PORT = 587
-SENDER_EMAIL = EMAIL_ACCOUNT                  # Reusing the same email to send
-SENDER_PASSWORD = APP_PASSWORD                # Reusing the same App Password
+# --- EMAIL CONTENT SETTINGS ---
+TARGET_SUBJECT = "Fwd: CNFM OPEN FT and WO"
+SENDER_EMAIL = "daohog.jason1@gmail.com" 
 
 # --- RECIPIENT SETTINGS ---
-# Add the emails of everyone who needs this report. 
-# For testing, just put your own email here first!
 RECIPIENT_EMAILS = [
-    "", 
+    "cacao.thesis08@gmail.com",
 
 ]
 
-# --- DIRECTORY SETTINGS ---
+# --- DIRECTORY & PIPELINE SETTINGS ---
 INPUT_DIR = "inputs"
-
-# --- PIPELINE SETTINGS ---
-CHECK_INTERVAL = 60  # How often to check the inbox (in seconds)
+CHECK_INTERVAL = 60 
 
 def setup_directories():
-    """Ensures the necessary directories exist before the pipeline runs."""
     if not os.path.exists(INPUT_DIR):
         os.makedirs(INPUT_DIR)

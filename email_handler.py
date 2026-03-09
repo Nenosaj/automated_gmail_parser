@@ -1,49 +1,50 @@
-import imaplib
-import email
-import os
-from config import EMAIL_ACCOUNT, APP_PASSWORD, IMAP_SERVER
+import os.path
+import base64
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from config import CLIENT_SECRET_FILE, TOKEN_FILE, SCOPES
 
-def connect_to_email():
-    """Establishes and returns a connection to the IMAP server."""
-    try:
-        mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-        mail.login(EMAIL_ACCOUNT, APP_PASSWORD)
-        return mail
-    except Exception as e:
-        print(f"Connection failed: {e}")
-        return None
-
-def get_unread_emails_by_subject(mail, subject):
-    """Searches for unread emails with a specific subject and returns their IDs."""
-    mail.select('inbox')
-    search_criteria = f'(UNSEEN SUBJECT "{subject}")'
-    status, messages = mail.search(None, search_criteria)
+def get_gmail_service():
+    """Authenticates the user and returns the Gmail API service object."""
+    creds = None
+    if os.path.exists(TOKEN_FILE):
+        creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
     
-    if status == 'OK' and messages[0]:
-        return messages[0].split()
-    return []
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
+            creds = flow.run_local_server(port=0)
+        with open(TOKEN_FILE, 'w') as token:
+            token.write(creds.to_json())
 
-def download_excel_attachments(mail, email_id, output_dir):
+    return build('gmail', 'v1', credentials=creds)
+
+def get_unread_emails_by_subject(service, subject):
+    """Searches for unread emails with a specific subject and returns them."""
+    query = f'is:unread subject:"{subject}"'
+    results = service.users().messages().list(userId='me', q=query).execute()
+    return results.get('messages', [])
+
+def download_excel_attachments(service, msg_id, output_dir):
     """Fetches an email, finds .xlsx attachments, and saves them locally."""
-    res, msg_data = mail.fetch(email_id, '(RFC822)')
-    raw_email = msg_data[0][1]
-    msg = email.message_from_bytes(raw_email)
-    
+    message = service.users().messages().get(userId='me', id=msg_id).execute()
     downloaded_files = []
     
-    for part in msg.walk():
-        if part.get_content_maintype() == 'multipart' or part.get('Content-Disposition') is None:
-            continue
+    parts = message['payload'].get('parts', [])
+    for part in parts:
+        if part.get('filename') and part.get('filename').endswith('.xlsx'):
+            attachment_id = part['body']['attachmentId']
+            attachment = service.users().messages().attachments().get(
+                userId='me', messageId=msg_id, id=attachment_id).execute()
             
-        filename = part.get_filename()
-        if filename and filename.endswith('.xlsx'):
-            filepath = os.path.join(output_dir, filename)
+            data = base64.urlsafe_b64decode(attachment['data'].encode('UTF-8'))
+            filepath = os.path.join(output_dir, part['filename'])
             with open(filepath, 'wb') as f:
-                f.write(part.get_payload(decode=True))
+                f.write(data)
             downloaded_files.append(filepath)
             
     return downloaded_files
-
-def mark_as_read(mail, email_id):
-    """Marks a specific email as read so it isn't processed again."""
-    mail.store(email_id, '+FLAGS', '\\Seen')

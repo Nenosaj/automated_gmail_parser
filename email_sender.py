@@ -1,29 +1,28 @@
-import smtplib
+import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from config import SENDER_EMAIL, SENDER_PASSWORD, SMTP_SERVER, SMTP_PORT, RECIPIENT_EMAILS
+from config import SENDER_EMAIL, RECIPIENT_EMAILS
 
-def send_html_email(records, headers):
-    """Generates an HTML table and emails it to the recipient list."""
+def send_html_email(service, records, headers):
+    """Generates an HTML table and emails it via the Gmail API."""
     if not records:
         print("[ERROR] No data provided to send email.")
         return
 
     print("Generating HTML email body...")
     
-    # 1. Build the HTML email with INLINE CSS so it renders correctly in Outlook/Gmail
-    html_content = """
+    html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif;">
         <p>Please find the daily broadband activities below:</p>
         <table style="border-collapse: collapse; width: 100%; font-size: 11px;">
             <tr>
-                <td colspan="{}" style="background-color: yellow; text-align: center; font-weight: bold; font-size: 16px; color: blue; border: 1px solid black; padding: 8px;">
+                <td colspan="{len(headers)}" style="background-color: yellow; text-align: center; font-weight: bold; font-size: 16px; color: blue; border: 1px solid black; padding: 8px;">
                     DAYTIME/SICE MOBILE BROADBAND ACTIVITIES
                 </td>
             </tr>
             <tr>
-    """.format(len(headers))
+    """
     
     # Add column headers
     for header in headers:
@@ -43,7 +42,7 @@ def send_html_email(records, headers):
     </html>
     """
 
-    # 2. Setup the Email Message
+    # Setup the Email Message
     msg = MIMEMultipart()
     msg['From'] = SENDER_EMAIL
     msg['To'] = ", ".join(RECIPIENT_EMAILS)
@@ -51,15 +50,11 @@ def send_html_email(records, headers):
     
     msg.attach(MIMEText(html_content, 'html'))
 
-    # 3. Connect to SMTP and Send
+    # Connect to API and Send
     try:
-        print("Connecting to SMTP server to send emails...")
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls() # Secure the connection
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        
-        server.send_message(msg)
-        server.quit()
+        print("Connecting to API to send emails...")
+        raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+        service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
         print(f"[SUCCESS] Formatted email successfully sent to {len(RECIPIENT_EMAILS)} recipient(s)!")
         
     except Exception as e:
