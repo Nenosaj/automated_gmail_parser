@@ -18,7 +18,7 @@ def send_html_email(service, records, headers):
         <table style="border-collapse: collapse; width: 100%; font-size: 11px;">
             <tr>
                 <td colspan="{len(headers)}" style="background-color: yellow; text-align: center; font-weight: bold; font-size: 16px; color: blue; border: 1px solid black; padding: 8px;">
-                    DAYTIME/SICE MOBILE BROADBAND ACTIVITIES
+                    Fwd: CNFM OPEN FT and WO
                 </td>
             </tr>
             <tr>
