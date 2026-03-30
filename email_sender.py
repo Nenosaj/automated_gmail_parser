@@ -1,24 +1,24 @@
 import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from config import SENDER_EMAIL, RECIPIENT_EMAILS
+from config import SENDER_EMAIL
 
-def send_html_email(service, records, headers):
+def send_html_email(service, records, headers, subject, recipients):
     """Generates an HTML table and emails it via the Gmail API."""
     if not records:
         print("[ERROR] No data provided to send email.")
         return
 
-    print("Generating HTML email body...")
+    print(f"Generating HTML email body for {subject}...")
     
     html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif;">
-        <p>Please find the daily broadband activities below:</p>
+        <p>Good Day! </p>
         <table style="border-collapse: collapse; width: 100%; font-size: 11px;">
             <tr>
-                <td colspan="{len(headers)}" style="background-color: yellow; text-align: center; font-weight: bold; font-size: 16px; color: blue; border: 1px solid black; padding: 8px;">
-                    Fwd: CNFM OPEN FT and WO
+                <td colspan="{len(headers)}" style="background-color: #559ED6; text-align: center; font-weight: bold; font-size: 16px; color: white; border: 1px solid black; padding: 8px;">
+                    {subject}
                 </td>
             </tr>
             <tr>
@@ -26,7 +26,7 @@ def send_html_email(service, records, headers):
     
     # Add column headers
     for header in headers:
-        html_content += f'<th style="background-color: blue; color: yellow; font-weight: bold; border: 1px solid black; padding: 5px;">{header.upper()}</th>'
+        html_content += f'<th style="background-color: #1A4280; color: white; font-weight: bold; border: 1px solid black; padding: 5px;">{header.upper()}</th>'
     html_content += "</tr>"
     
     # Add data rows
@@ -45,8 +45,8 @@ def send_html_email(service, records, headers):
     # Setup the Email Message
     msg = MIMEMultipart()
     msg['From'] = SENDER_EMAIL
-    msg['To'] = ", ".join(RECIPIENT_EMAILS)
-    msg['Subject'] = "Fwd: CNFM OPEN FT and WO"
+    msg['To'] = ", ".join(recipients)
+    msg['Subject'] = subject
     
     msg.attach(MIMEText(html_content, 'html'))
 
@@ -55,7 +55,7 @@ def send_html_email(service, records, headers):
         print("Connecting to API to send emails...")
         raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
-        print(f"[SUCCESS] Formatted email successfully sent to {len(RECIPIENT_EMAILS)} recipient(s)!")
+        print(f"[SUCCESS] Formatted email successfully sent to {len(recipients)} recipient(s)!")
         
     except Exception as e:
         print(f"[ERROR] Failed to send email: {e}")

@@ -1,5 +1,6 @@
 import os.path
 import base64
+import re
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -29,20 +30,30 @@ def get_unread_emails_by_subject(service, subject):
     results = service.users().messages().list(userId='me', q=query).execute()
     return results.get('messages', [])
 
+def sanitize_filename(filename):
+    """Removes invalid characters from filenames to prevent Windows OS errors."""
+    return re.sub(r'[\\/*?:"<>|]', "_", filename)
+
 def download_excel_attachments(service, msg_id, output_dir):
-    """Fetches an email, finds .xlsx attachments, and saves them locally."""
+    """Fetches an email, finds .xlsx attachments, and saves them locally safely."""
     message = service.users().messages().get(userId='me', id=msg_id).execute()
     downloaded_files = []
     
     parts = message['payload'].get('parts', [])
     for part in parts:
-        if part.get('filename') and part.get('filename').endswith('.xlsx'):
+        original_filename = part.get('filename')
+        if original_filename and original_filename.endswith('.xlsx'):
+            
+            # Clean the filename before trying to save it!
+            safe_filename = sanitize_filename(original_filename)
+            
             attachment_id = part['body']['attachmentId']
             attachment = service.users().messages().attachments().get(
                 userId='me', messageId=msg_id, id=attachment_id).execute()
             
             data = base64.urlsafe_b64decode(attachment['data'].encode('UTF-8'))
-            filepath = os.path.join(output_dir, part['filename'])
+            filepath = os.path.join(output_dir, safe_filename)
+            
             with open(filepath, 'wb') as f:
                 f.write(data)
             downloaded_files.append(filepath)

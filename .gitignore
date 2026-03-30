@@ -1,4 +1,48 @@
-.venv
-__pycache__
+# =========================
+# SECRETS & DATA (CRITICAL)
+# =========================
 credentials.json
 token.json
+settings.json
+
+# =========================
+# APPLICATION INPUTS
+# =========================
+inputs/
+*.xlsx
+*.xls
+*.csv
+
+# =========================
+# PYTHON ENVIRONMENTS
+# =========================
+.venv/
+venv/
+env/
+
+# =========================
+# PYTHON CACHE
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# BUILD & COMPILE JUNK
+# =========================
+build/
+dist/
+*.spec
+
+# =========================
+# EXECUTABLES & INSTALLERS
+# =========================
+*.exe
+
+# =========================
+# IDE & EDITOR SETTINGS
+# =========================
+.vscode/
+.idea/
+.qodo/
