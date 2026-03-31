@@ -60,5 +60,21 @@ The app will now automatically wake up in the background at your scheduled times
 
 ---
 
+## ❓ Frequently Asked Questions & Troubleshooting
+
+**Q: I want to send emails from a different Gmail account. Do I need to redo the Google Cloud setup and get a new `credentials.json`?**
+**A:** No! Your `credentials.json` file is tied to the application itself, not your specific email address. To switch accounts:
+1. Open the app and type the new email address in the **Step 2: Sender Setup** box.
+2. Click **Save Configuration**.
+3. The app will automatically delete your old login token.
+4. The next time the background loop starts, a browser window will open asking you to log in and authorize your new email address. 
+
+**Q: I tried to log in, but Google blocked it and said the app "isn't verified" or is unsafe!**
+**A:** Because you created your own personal Google Cloud project, it defaults to "Testing" mode. Google strictly limits who can log into a testing app. 
+* **The Fix:** Go back to your [Google Cloud Console](https://console.cloud.google.com/) > **APIs & Services** > **OAuth consent screen**. Scroll down to the **Test users** section and click **+ Add Users**. Add the exact email address you are trying to use, click Save, and try logging in again!
+
+**Q: My computer/antivirus says the installer is a virus!**
+**A:** This is a common "False Positive." Because this is a free, open-source tool compiled with PyInstaller, it doesn't have an expensive corporate digital signature. Windows Defender flags "Unknown Publishers" by default. Click **More Info -> Run Anyway** to install. You can always view the full, transparent source code in this repository to verify it is completely safe.
+
 ## 👨‍💻 Built By
 Created by **Jason T. Daohog**

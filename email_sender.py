@@ -1,7 +1,7 @@
 import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from config import SENDER_EMAIL
+import config # Changed to import the whole config module
 
 def send_html_email(service, records, headers, subject, recipients):
     """Generates an HTML table and emails it via the Gmail API."""
@@ -10,6 +10,8 @@ def send_html_email(service, records, headers, subject, recipients):
         return
 
     print(f"Generating HTML email body for {subject}...")
+    import sys
+    sys.stdout.flush()
     
     html_content = f"""
     <html>
@@ -44,7 +46,11 @@ def send_html_email(service, records, headers, subject, recipients):
 
     # Setup the Email Message
     msg = MIMEMultipart()
-    msg['From'] = SENDER_EMAIL
+    
+    # GRAB THE FRESH SENDER EMAIL FROM SETTINGS
+    current_settings = config.load_settings()
+    msg['From'] = current_settings.get("sender_email", "")
+    
     msg['To'] = ", ".join(recipients)
     msg['Subject'] = subject
     
@@ -53,9 +59,12 @@ def send_html_email(service, records, headers, subject, recipients):
     # Connect to API and Send
     try:
         print("Connecting to API to send emails...")
+        sys.stdout.flush()
         raw_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         service.users().messages().send(userId='me', body={'raw': raw_message}).execute()
         print(f"[SUCCESS] Formatted email successfully sent to {len(recipients)} recipient(s)!")
+        sys.stdout.flush()
         
     except Exception as e:
         print(f"[ERROR] Failed to send email: {e}")
+        sys.stdout.flush()
