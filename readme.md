@@ -77,4 +77,4 @@ The app will now automatically wake up in the background at your scheduled times
 **A:** This is a common "False Positive." Because this is a free, open-source tool compiled with PyInstaller, it doesn't have an expensive corporate digital signature. Windows Defender flags "Unknown Publishers" by default. Click **More Info -> Run Anyway** to install. You can always view the full, transparent source code in this repository to verify it is completely safe.
 
 ## 👨‍💻 Built By
-Created by **Jason T. Daohog**
+**Jason T. Daohog** **Nenosaj**
