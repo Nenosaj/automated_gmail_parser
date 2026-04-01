@@ -113,30 +113,45 @@ class EmailBotGUI:
         frame_rules = ttk.LabelFrame(self.tab_config, text=" Step 3: Daily Email Rules & Schedule ", padding="15 15 15 15")
         frame_rules.pack(side="top", fill="both", expand=True)
 
+        # --- TWO COLUMN LAYOUT FOR INPUTS ---
         frame_input = ttk.Frame(frame_rules)
         frame_input.pack(fill="x", pady=(0, 10))
-        
-        ttk.Label(frame_input, text="Subject:").grid(row=0, column=0, sticky="w", padx=(0, 5))
+
+        frame_left = ttk.Frame(frame_input)
+        frame_left.pack(side="left", fill="y", expand=False, padx=(0, 20))
+
+        frame_right = ttk.Frame(frame_input)
+        frame_right.pack(side="right", fill="both", expand=True)
+
+        # --- LEFT SIDE (Triggers & Emails) ---
+        ttk.Label(frame_left, text="Subject:").grid(row=0, column=0, sticky="e", padx=(0, 5), pady=(5, 0))
         self.new_sub_var = tk.StringVar()
-        ttk.Entry(frame_input, textvariable=self.new_sub_var, width=30).grid(row=0, column=1, sticky="w", padx=(0, 15))
+        ttk.Entry(frame_left, textvariable=self.new_sub_var, width=35).grid(row=0, column=1, sticky="w", pady=(5, 0))
 
-        ttk.Label(frame_input, text="Recipients:").grid(row=0, column=2, sticky="w", padx=(0, 5))
+        ttk.Label(frame_left, text="Recipients:").grid(row=1, column=0, sticky="e", padx=(0, 5), pady=(15, 0))
         self.new_rec_var = tk.StringVar()
-        ttk.Entry(frame_input, textvariable=self.new_rec_var, width=35).grid(row=0, column=3, sticky="w", padx=(0, 15))
-        tk.Label(frame_input, text="* Separate multiple emails with commas", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f4f5f7").grid(row=1, column=3, sticky="w", pady=(0, 5))
+        ttk.Entry(frame_left, textvariable=self.new_rec_var, width=35).grid(row=1, column=1, sticky="w", pady=(15, 0))
 
-        ttk.Label(frame_input, text="Time(24h):").grid(row=0, column=4, sticky="w", padx=(0, 5))
+        tk.Label(frame_left, text="* Separate multiple emails with commas", font=("Segoe UI", 8, "italic"), fg="#64748b", bg="#f4f5f7").grid(row=2, column=1, sticky="nw", pady=(2, 5))
+
+        # --- RIGHT SIDE (Body, Time & Buttons) ---
+        ttk.Label(frame_right, text="Custom Body:").grid(row=0, column=0, sticky="ne", padx=(0, 5), pady=(5, 0))
+        self.new_body_text = tk.Text(frame_right, width=65, height=4, font=("Segoe UI", 9), relief="solid", borderwidth=1)
+        self.new_body_text.grid(row=0, column=1, sticky="nw", pady=(5, 0))
+
+        frame_time_btns = ttk.Frame(frame_right)
+        frame_time_btns.grid(row=1, column=1, sticky="w", pady=(10, 0))
+
+        ttk.Label(frame_time_btns, text="Time(24h):").pack(side="left", padx=(0, 5))
         self.new_time_var = tk.StringVar(value="08:00")
-        ttk.Entry(frame_input, textvariable=self.new_time_var, width=8).grid(row=0, column=5, sticky="w", padx=(0, 15))
+        ttk.Entry(frame_time_btns, textvariable=self.new_time_var, width=8).pack(side="left", padx=(0, 20))
 
-        frame_form_btns = ttk.Frame(frame_rules)
-        frame_form_btns.pack(fill="x", pady=(0, 15))
-        
-        tk.Button(frame_form_btns, text="+ Add New Rule", command=self.add_rule, bg="#10b981", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", padx=15, pady=4).pack(side="left", padx=(0, 10))
-        tk.Button(frame_form_btns, text="💾 Update Selected", command=self.update_rule, bg="#3b82f6", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", padx=15, pady=4).pack(side="left", padx=(0, 10))
-        tk.Button(frame_form_btns, text="✖ Clear Form", command=self.clear_form, bg="#e2e8f0", fg="#333333", font=("Segoe UI", 9), relief="flat", padx=15, pady=4).pack(side="left")
+        tk.Button(frame_time_btns, text="+ Add New Rule", command=self.add_rule, bg="#10b981", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", padx=10, pady=3).pack(side="left", padx=(0, 8))
+        tk.Button(frame_time_btns, text="💾 Update Selected", command=self.update_rule, bg="#3b82f6", fg="white", font=("Segoe UI", 9, "bold"), relief="flat", padx=10, pady=3).pack(side="left", padx=(0, 8))
+        tk.Button(frame_time_btns, text="✖ Clear Form", command=self.clear_form, bg="#e2e8f0", fg="#333333", font=("Segoe UI", 9), relief="flat", padx=10, pady=3).pack(side="left")
 
-        columns = ("subject", "recipients", "time")
+        # --- TREEVIEW SECTION ---
+        columns = ("subject", "recipients", "time", "body")
         
         frame_rule_btns = ttk.Frame(frame_rules)
         frame_rule_btns.pack(side="bottom", fill="x", pady=(5, 0))
@@ -144,15 +159,17 @@ class EmailBotGUI:
         tk.Button(frame_rule_btns, text="📅 Sync Tasks to Windows Scheduler", command=self.sync_scheduler, bg="#2563eb", fg="white", font=("Segoe UI", 10, "bold"), relief="flat", padx=15, pady=5).pack(side="right")
 
         tree_frame = ttk.Frame(frame_rules)
-        tree_frame.pack(side="top", fill="both", expand=True, pady=(0, 5)) 
+        tree_frame.pack(side="top", fill="both", expand=True, pady=(10, 5)) 
         
         self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", selectmode="browse")
         self.tree.heading("subject", text="Email Subject (Trigger)")
         self.tree.heading("recipients", text="Forward To")
         self.tree.heading("time", text="Daily Schedule")
-        self.tree.column("subject", width=500, minwidth=300, anchor="w", stretch=True) 
-        self.tree.column("recipients", width=250, minwidth=150, anchor="w", stretch=True)
-        self.tree.column("time", width=120, minwidth=120, anchor="center", stretch=False)
+        self.tree.heading("body", text="Custom Body Text")
+        self.tree.column("subject", width=300, minwidth=200, anchor="w", stretch=True) 
+        self.tree.column("recipients", width=200, minwidth=150, anchor="w", stretch=True)
+        self.tree.column("time", width=100, minwidth=100, anchor="center", stretch=False)
+        self.tree.column("body", width=250, minwidth=150, anchor="w", stretch=True)
         self.tree.bind("<<TreeviewSelect>>", self.on_tree_select)
         
         scrollbar = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
@@ -208,7 +225,8 @@ class EmailBotGUI:
         for rule in self.settings.get("email_rules", []):
             recs = ", ".join(rule["recipients"])
             time_val = rule.get("time", "08:00")
-            self.tree.insert("", "end", values=(rule["subject"], recs, time_val))
+            body_val = rule.get("body", "")
+            self.tree.insert("", "end", values=(rule["subject"], recs, time_val, body_val))
 
     def on_tree_select(self, event):
         selected = self.tree.selection()
@@ -217,11 +235,17 @@ class EmailBotGUI:
             self.new_sub_var.set(values[0])
             self.new_rec_var.set(values[1])
             self.new_time_var.set(values[2])
+            
+            # Clear text box and insert data
+            self.new_body_text.delete("1.0", tk.END)
+            if len(values) > 3:
+                self.new_body_text.insert("1.0", values[3])
 
     def clear_form(self):
         self.new_sub_var.set("")
         self.new_rec_var.set("")
         self.new_time_var.set("")
+        self.new_body_text.delete("1.0", tk.END)
         for item in self.tree.selection():
             self.tree.selection_remove(item)
 
@@ -229,6 +253,7 @@ class EmailBotGUI:
         sub = self.new_sub_var.get().strip()
         recs = self.new_rec_var.get().strip()
         time_val = self.new_time_var.get().strip()
+        body_val = self.new_body_text.get("1.0", "end-1c").strip() # Get multi-line text
         
         if not sub or not recs:
             messagebox.showwarning("Input Error", "Both Subject and Recipients are required.")
@@ -236,7 +261,7 @@ class EmailBotGUI:
         if not re.match(r"^([01]\d|2[0-3]):([0-5]\d)$", time_val):
             messagebox.showwarning("Input Error", "Time must be in 24-hour format (e.g., 08:00 or 14:30).")
             return None
-        return (sub, recs, time_val)
+        return (sub, recs, time_val, body_val)
 
     def add_rule(self):
         valid_data = self.validate_inputs()
@@ -283,10 +308,16 @@ class EmailBotGUI:
         new_rules = []
         for item in self.tree.get_children():
             values = self.tree.item(item, "values")
-            # Convert semicolons to commas for bulletproof inputs
             clean_string = values[1].replace(";", ",")
             recipients_list = [email.strip() for email in clean_string.split(",") if email.strip()]
-            new_rules.append({"subject": values[0], "recipients": recipients_list, "time": values[2]})
+            body_text = values[3] if len(values) > 3 else ""
+            
+            new_rules.append({
+                "subject": values[0], 
+                "recipients": recipients_list, 
+                "time": values[2],
+                "body": body_text
+            })
         
         self.settings["email_rules"] = new_rules
         

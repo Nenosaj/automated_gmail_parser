@@ -9,7 +9,7 @@ from email_handler import get_gmail_service, get_unread_emails_by_subject, downl
 from excel_processor import extract_data_from_excel
 from email_sender import send_html_email
 
-def process_single_rule(service, subject, recipients):
+def process_single_rule(service, subject, recipients, custom_body=""):
     """Processes only one specific rule, then stops and cleans up."""
     print(f"Checking for emails matching: '{subject}'...")
     sys.stdout.flush() 
@@ -31,7 +31,7 @@ def process_single_rule(service, subject, recipients):
                 if records and headers:
                     print("Initiating email forward sequence...")
                     sys.stdout.flush()
-                    send_html_email(service, records, headers, subject, recipients)
+                    send_html_email(service, records, headers, subject, recipients, custom_body)
                     
                     # --- AUTO-CLEANUP STEP ---
                     try:
@@ -58,7 +58,7 @@ def load_settings():
 def process_rule(rule, sender_email):
     setup_directories()
     service = get_gmail_service()
-    process_single_rule(service, rule["subject"], rule["recipients"])
+    process_single_rule(service, rule["subject"], rule["recipients"], rule.get("body", ""))
 
 def continuous_loop():
     """The original infinite loop for the GUI's 'Start Pipeline' button."""
@@ -73,7 +73,7 @@ def continuous_loop():
             rules = current_settings.get("email_rules", [])
             
             for rule in rules:
-                process_single_rule(service, rule["subject"], rule["recipients"])
+                process_single_rule(service, rule["subject"], rule["recipients"], rule.get("body", ""))
         except Exception as e:
             print(f"[ERROR] Pipeline encountered an issue: {e}")
             sys.stdout.flush()
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         rules = current_settings.get("email_rules", [])
         rule = next((r for r in rules if r["subject"] == args.subject), None)
         if rule:
-            process_single_rule(service, rule["subject"], rule["recipients"])
+            process_single_rule(service, rule["subject"], rule["recipients"], rule.get("body", ""))
         else:
             print(f"[ERROR] No rule found in settings for subject: {args.subject}")
     else:

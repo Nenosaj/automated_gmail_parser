@@ -1,9 +1,9 @@
 import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import config # Changed to import the whole config module
+import config 
 
-def send_html_email(service, records, headers, subject, recipients):
+def send_html_email(service, records, headers, subject, recipients, custom_body=""):
     """Generates an HTML table and emails it via the Gmail API."""
     if not records:
         print("[ERROR] No data provided to send email.")
@@ -16,7 +16,8 @@ def send_html_email(service, records, headers, subject, recipients):
     html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif;">
-        <p>Good Day! </p>
+        <p></p>
+        <p style="white-space: pre-wrap; margin-bottom: 15px;">{custom_body}</p>
         <table style="border-collapse: collapse; width: 100%; font-size: 11px;">
             <tr>
                 <td colspan="{len(headers)}" style="background-color: #559ED6; text-align: center; font-weight: bold; font-size: 16px; color: white; border: 1px solid black; padding: 8px;">
